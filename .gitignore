@@ -24,3 +24,9 @@ hs_err_pid*
 replay_pid*
 
 /bin/
+
+# my person files i wanna ignore
+.DS_Store
+.idea/*
+ATM-Machine-Java.iml
+logfiles.txt

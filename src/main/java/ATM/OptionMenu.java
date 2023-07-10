@@ -1,4 +1,9 @@
+package ATM;
+
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.InputMismatchException;
@@ -10,6 +15,8 @@ public class OptionMenu {
 	Scanner menuInput = new Scanner(System.in);
 	DecimalFormat moneyFormat = new DecimalFormat("'$'###,##0.00");
 	HashMap<Integer, Account> data = new HashMap<Integer, Account>();
+	StringBuilder sb = new StringBuilder();
+	private final String savedAccountInfo = "acc_info.txt";
 
 	public void getLogin() throws IOException {
 		boolean end = false;
@@ -47,7 +54,8 @@ public class OptionMenu {
 				System.out.println("\nSelect the account you want to access: ");
 				System.out.println(" Type 1 - Checking Account");
 				System.out.println(" Type 2 - Savings Account");
-				System.out.println(" Type 3 - Exit");
+				System.out.println(" Type 3 - Check All Account Balances");
+				System.out.println(" Type 4 - Exit");
 				System.out.print("\nChoice: ");
 
 				int selection = menuInput.nextInt();
@@ -60,6 +68,13 @@ public class OptionMenu {
 					getSaving(acc);
 					break;
 				case 3:
+					System.out.println("\nChecking Account Balance: " + moneyFormat.format(acc.getCheckingBalance()));
+					System.out.println("\nSavings Account Balance: " + moneyFormat.format(acc.getSavingBalance()));
+
+					// log the current action
+					logAction("Viewed all account balances for %d.", acc.getCustomerNumber());
+					break;
+				case 4:
 					end = true;
 					break;
 				default:
@@ -89,16 +104,27 @@ public class OptionMenu {
 				switch (selection) {
 				case 1:
 					System.out.println("\nChecking Account Balance: " + moneyFormat.format(acc.getCheckingBalance()));
+
+					// log the current action
+					logAction("Viewed Checking account balance for %d.", acc.getCustomerNumber());
 					break;
 				case 2:
 					acc.getCheckingWithdrawInput();
+
+					// log the current action
+					logAction("Withdrew from Checking account for %d.", acc.getCustomerNumber());
 					break;
 				case 3:
 					acc.getCheckingDepositInput();
-					break;
 
+					// log the current action
+					logAction("Deposit into Checking account for %d.", acc.getCustomerNumber());
+					break;
 				case 4:
 					acc.getTransferInput("Checking");
+
+					// log the current action
+					logAction("Transfer from Checking for %d.", acc.getCustomerNumber());
 					break;
 				case 5:
 					end = true;
@@ -128,15 +154,27 @@ public class OptionMenu {
 				switch (selection) {
 				case 1:
 					System.out.println("\nSavings Account Balance: " + moneyFormat.format(acc.getSavingBalance()));
+
+					// log the current action
+					logAction("Viewed Savings account balance for %d.", acc.getCustomerNumber());
 					break;
 				case 2:
 					acc.getsavingWithdrawInput();
+
+					// log the current action
+					logAction("Withdrew from Savings account for %d.", acc.getCustomerNumber());
 					break;
 				case 3:
 					acc.getSavingDepositInput();
+
+					// log the current action
+					logAction("Deposit into Savings account for %d.", acc.getCustomerNumber());
 					break;
 				case 4:
 					acc.getTransferInput("Savings");
+
+					// log the current action
+					logAction("Transfer from Savings for %d.", acc.getCustomerNumber());
 					break;
 				case 5:
 					end = true;
@@ -176,14 +214,18 @@ public class OptionMenu {
 		System.out.println("\nEnter PIN to be registered");
 		int pin = menuInput.nextInt();
 		data.put(cst_no, new Account(cst_no, pin));
-		System.out.println("\nYour new account has been successfuly registered!");
+		System.out.println("\nYour new account has been successfully registered!");
+
+		// log the current action
+		logAction("Created account for %d.", cst_no);
+
 		System.out.println("\nRedirecting to login.............");
 		getLogin();
 	}
 
 	public void mainMenu() throws IOException {
-		data.put(952141, new Account(952141, 191904, 1000, 5000));
-		data.put(123, new Account(123, 123, 20000, 50000));
+		readAccountData();
+
 		boolean end = false;
 		while (!end) {
 			try {
@@ -210,6 +252,84 @@ public class OptionMenu {
 		}
 		System.out.println("\nThank You for using this ATM.\n");
 		menuInput.close();
+		
+		saveAccountData();
+		printLogFile();
+		
 		System.exit(0);
+	}
+
+	private void saveAccountData() {
+		try{
+			PrintWriter fileOut = new PrintWriter(savedAccountInfo);
+			StringBuilder sb = new StringBuilder();
+			// Print the info to the file
+			for(int accountNumber : data.keySet()){
+				Account acc = data.get(accountNumber);
+				sb.append(accountNumber);
+				sb.append(',');
+				sb.append(acc.getPinNumber());
+				sb.append(',');
+				sb.append(acc.getCheckingBalance());
+				sb.append(',');
+				sb.append(acc.getSavingBalance());
+				sb.append('\n');
+			}
+			fileOut.print(sb.toString());
+			fileOut.close();
+		}
+		catch (IOException e) {
+			System.out.println("File not found");
+		}
+	}
+
+	private void readAccountData() {
+		try {
+			Scanner fileIn = new Scanner(new File(savedAccountInfo));
+
+			while (fileIn.hasNext()) {
+				// Reads the current line
+				String[] csvFileLine = fileIn.nextLine().split(",");
+				if(csvFileLine.length != 4){
+					// every line should always have 4 values
+					continue;
+				}
+				double[] accountInfo = new double[csvFileLine.length];
+				// Parse the strings as integers
+				for(int i = 0; i < csvFileLine.length; i++){
+					accountInfo[i] = Double.valueOf(csvFileLine[i]);
+				}
+				data.put((int) accountInfo[0], new Account((int) accountInfo[0], (int) accountInfo[1], accountInfo[2], accountInfo[3]));
+			}
+			fileIn.close();
+		}
+		catch (IOException e) {
+			System.out.println("File not found");
+		}
+
+		// just in case we don't have any data in there
+		if(data.isEmpty()){
+			System.out.println("Reading in default accounts");
+
+			data.put(952141, new Account(952141, 191904, 1000, 5000));
+			data.put(123, new Account(123, 123, 20000, 50000));
+		}
+	}
+
+	private void logAction(String taskMessage, int customerNumber) {
+		sb.append(String.format(taskMessage, customerNumber));
+		sb.append("\n");
+	}
+
+	private void printLogFile() {
+		PrintWriter fileOut = null;
+		try {
+			fileOut = new PrintWriter("logfiles.txt");
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+		fileOut.print(sb.toString());
+		// Close out file
+		fileOut.close();
 	}
 }
