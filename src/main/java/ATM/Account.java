@@ -10,6 +10,7 @@ public class Account {
 	private int pinNumber;
 	private double checkingBalance = 0;
 	private double savingBalance = 0;
+	private int accountNumber;
 
 	Scanner input = new Scanner(System.in);
 	DecimalFormat moneyFormat = new DecimalFormat("'$'###,##0.00");
@@ -20,6 +21,13 @@ public class Account {
 	public Account(int customerNumber, int pinNumber) {
 		this.customerNumber = customerNumber;
 		this.pinNumber = pinNumber;
+		this.accountNumber = 1;
+	}
+
+	public Account(int customerNumber, int pinNumber, int accountNumber) {
+		this.customerNumber = customerNumber;
+		this.pinNumber = pinNumber;
+		this.accountNumber = accountNumber;
 	}
 
 	public Account(int customerNumber, int pinNumber, double checkingBalance, double savingBalance) {
@@ -27,6 +35,15 @@ public class Account {
 		this.pinNumber = pinNumber;
 		this.checkingBalance = checkingBalance;
 		this.savingBalance = savingBalance;
+		this.accountNumber = 1;
+	}
+
+	public Account(int customerNumber, int pinNumber, double checkingBalance, double savingBalance, int accountNumber) {
+		this.customerNumber = customerNumber;
+		this.pinNumber = pinNumber;
+		this.checkingBalance = checkingBalance;
+		this.savingBalance = savingBalance;
+		this.accountNumber = accountNumber;
 	}
 
 	public int setCustomerNumber(int customerNumber) {
@@ -36,6 +53,15 @@ public class Account {
 
 	public int getCustomerNumber() {
 		return customerNumber;
+	}
+
+	public int setAccountNumber(int accountNumber) {
+		this.accountNumber = accountNumber;
+		return accountNumber;
+	}
+
+	public int getAccountNumber() {
+		return accountNumber;
 	}
 
 	public int setPinNumber(int pinNumber) {
